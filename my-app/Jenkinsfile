@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Clone Code') {
+            steps {
+                git 'https://github.com/rajatgoel999/my-app.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                sh '''
+                mvn sonar:sonar \
+                -Dsonar.projectKey=my-app \
+                -Dsonar.host.url=http://192.168.70.138:9000 \
+                -Dsonar.login=YOUR_TOKEN
+                '''
+            }
+        }
+
+        stage('Upload to Nexus') {
+            steps {
+                sh '''
+                mvn deploy \
+                -DskipTests \
+                -Dnexus.url=http://YOUR_NEXUS_IP:8081 \
+                -Dnexus.repository=releases \
+                -Dnexus.username=admin \
+                -Dnexus.password=admin123
+                '''
+            }
+        }
+    }
+}
